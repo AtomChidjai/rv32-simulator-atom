@@ -71,7 +71,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ vars.DOCKERHUB_USERNAME }}/rv32i-simulator
+          images: ${{ vars.DOCKERHUB_USERNAME }}/rv32-simulator-atom
           tags: |
             type=raw,value=latest
             type=sha,prefix=sha-
