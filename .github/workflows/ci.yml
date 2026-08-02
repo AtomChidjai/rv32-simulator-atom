@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install Python and RISC-V tools
+        run: |
+          uv python install 3.12
+          sudo apt-get update
+          sudo apt-get install -y gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf
+
+      - name: Install dependencies
+        run: uv sync --extra test --extra browser-test --extra lint
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Build package and check CLI entry point
+        run: |
+          uv build
+          uv run rv32i --help
+
+      - name: Run complete test suite
+        run: uv run pytest -q
+
+      - name: Run real-browser GUI smoke
+        env:
+          RUN_BROWSER_TESTS: "1"
+        run: uv run pytest -q tests/test_gui_browser.py

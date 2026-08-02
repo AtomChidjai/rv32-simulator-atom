@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[oc]
+*.egg-info/
+build/
+dist/
+wheels/
+
+# Virtual environments
+.venv/
+
+# Editor / tool local state
+.opencode/
+.mimocode/
+.zcode/
+gui/.backup*/
+
+# Compiled artifacts
+*.bin
+*.elf
+
+# objdump / disassembly dumps (regenerable)
+*.txt
+
+# Generated files
+PROJECT_TREE.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup / local working dirs
+test/
+rv32i/backup/
+
+# Local notes; README.md is the only public Markdown document.
+*.md
+!README.md
+
+opencode.json

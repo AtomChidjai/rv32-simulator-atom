@@ -1,0 +1,6 @@
+prune rv32i/backup
+prune gui/.backup_v1
+prune gui/.backup_v2
+prune tests
+prune docs
+global-exclude __pycache__ *.py[cod] *.bin *.elf
