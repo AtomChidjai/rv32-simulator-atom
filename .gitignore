@@ -10,6 +10,7 @@ wheels/
 .venv/
 
 # Editor / tool local state
+.ruff_cache/
 .opencode/
 .mimocode/
 .zcode/

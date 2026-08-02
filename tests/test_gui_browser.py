@@ -15,6 +15,7 @@ selenium = pytest.importorskip("selenium")
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
@@ -188,12 +189,11 @@ def test_primary_gui_workflow_in_real_browser() -> None:
         wait.until(lambda browser: "Breakpoint hit" in status(browser))
 
         driver.find_element(By.ID, "sim-terminal").click()
-        terminal_input = wait.until(
-            lambda browser: browser.find_element(
-                By.CSS_SELECTOR, ".xterm-helper-textarea"
-            )
+        terminal = wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, ".xterm"))
         )
-        terminal_input.send_keys("Z")
+        terminal.click()
+        driver.switch_to.active_element.send_keys("Z")
 
         if isinstance(driver, webdriver.Chrome):
             severe = [
