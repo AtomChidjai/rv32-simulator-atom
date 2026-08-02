@@ -91,6 +91,33 @@ Running directly from a source checkout is also supported:
 uv run gui/app.py
 ```
 
+### Docker
+
+The image includes Python, the simulator, GUI assets, example programs, and
+the GNU RISC-V bare-metal toolchain:
+
+```bash
+docker build -t rv32i-simulator .
+docker run --rm -p 8080:8080 rv32i-simulator
+```
+
+Open <http://127.0.0.1:8080>. The container runs as an unprivileged user and
+stores compiled programs only in its temporary filesystem.
+
+### Deploy on Render
+
+The included `render.yaml` defines a free Docker web service in the Singapore
+region. After pushing the repository to GitHub:
+
+1. In Render, choose **New > Blueprint**.
+2. Connect the GitHub repository and select `render.yaml`.
+3. Review the free service and apply the Blueprint.
+4. Wait for the image build, then open the generated `onrender.com` URL.
+
+Render supplies its listening port through `PORT`; the application reads it
+automatically. Free services sleep when idle and use an ephemeral filesystem,
+which is suitable here because build outputs are temporary.
+
 ### First GUI run
 
 1. Choose a program from **Example**, or paste freestanding C/assembly into
@@ -217,6 +244,7 @@ advanced use but are not treated as a compatibility-stable public API.
 |---|---|---|
 | `RV32I_GUI_HOST` | `127.0.0.1` | NiceGUI bind address |
 | `RV32I_GUI_PORT` | `8080` | NiceGUI port |
+| `PORT` | unset | Hosting-provider port when `RV32I_GUI_PORT` is unset |
 | `RV32I_DEBUG` | unset | Set to `1` for core instruction diagnostics |
 
 For example:

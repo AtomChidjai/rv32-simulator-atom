@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from types import SimpleNamespace
 
+from gui import app as gui_app
 from gui.app import SimulatorUI, _ASSEMBLY_STARTER, _C_STARTER
 from gui.example_programs import EXAMPLE_PROGRAMS_BY_ID
 from gui.renderers import (
@@ -43,6 +44,28 @@ class _WidgetStub:
 
     def set_value(self, value: str) -> None:
         self.value = value
+
+
+def test_gui_main_uses_platform_port(monkeypatch) -> None:
+    options: dict = {}
+    monkeypatch.delenv("RV32I_GUI_PORT", raising=False)
+    monkeypatch.setenv("PORT", "10000")
+    monkeypatch.setattr(gui_app.ui, "run", lambda **kwargs: options.update(kwargs))
+
+    gui_app.main()
+
+    assert options["port"] == 10000
+
+
+def test_gui_main_prefers_project_port(monkeypatch) -> None:
+    options: dict = {}
+    monkeypatch.setenv("RV32I_GUI_PORT", "9090")
+    monkeypatch.setenv("PORT", "10000")
+    monkeypatch.setattr(gui_app.ui, "run", lambda **kwargs: options.update(kwargs))
+
+    gui_app.main()
+
+    assert options["port"] == 9090
 
 
 def test_disassembly_drops_section_heading_and_preserves_pc_mapping() -> None:

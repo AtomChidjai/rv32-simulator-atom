@@ -1489,12 +1489,13 @@ def build_page() -> None:
 
 def main() -> None:
     """Launch the NiceGUI web simulator. Entry point for `rv32i-gui`."""
+    port = os.environ.get("RV32I_GUI_PORT", os.environ.get("PORT", "8080"))
     try:
         ui.run(
             root=build_page,
             title="RV32I Simulator",
             host=os.environ.get("RV32I_GUI_HOST", "127.0.0.1"),
-            port=int(os.environ.get("RV32I_GUI_PORT", "8080")),
+            port=int(port),
             reload=False,
             dark=False,
         )

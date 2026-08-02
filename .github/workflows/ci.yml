@@ -33,6 +33,9 @@ jobs:
           uv build
           uv run rv32i --help
 
+      - name: Build Docker image
+        run: docker build --tag rv32i-simulator:ci .
+
       - name: Run complete test suite
         run: uv run pytest -q
 
