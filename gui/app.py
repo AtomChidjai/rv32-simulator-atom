@@ -192,7 +192,7 @@ class SimulatorUI:
                         self.editor = ui.codemirror(value="", language="c", theme=CM_DARK).classes("w-full").style("height:100%;min-height:0")
                     self.linker_editor_wrap = ui.column().classes("w-full").style("flex:1;height:100%;min-height:0;display:none")
                     with self.linker_editor_wrap:
-                        self.ld_editor = ui.codemirror(value="", language="ld", theme=CM_DARK).classes("w-full").style("height:100%;min-height:0")
+                        self.ld_editor = ui.codemirror(value="", language="C", theme=CM_DARK).classes("w-full").style("height:100%;min-height:0")
                         self.ld_hint = ui.label("").classes("text-xs").style(f"color:{C_FG_DIM};padding-top:6px")
                     self.refresh_source_view_toggle()
 
