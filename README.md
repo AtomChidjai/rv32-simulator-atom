@@ -14,6 +14,14 @@ different.
 > viewport at least 1280 px wide; 1440 px or wider is recommended. Mobile and
 > touch-first layouts are not supported at this stage.
 
+<p align="center">
+  <img
+    src=".github/assets/githubreadmeweb.jpg"
+    alt="RISC-V RV32IMC simulator desktop interface"
+    width="1400"
+  >
+</p>
+
 ## What is included
 
 - RV32I base integer instructions, M multiplication/division, RV32C compressed
