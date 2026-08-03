@@ -1,87 +1,102 @@
-# RISC-V RV32IMC Simulator
+# RISC-V (RV32) Simulator
 
-An educational RISC-V instruction-set simulator with three execution engines,
-a desktop web interface, and a headless CLI. The simulator executes RV32I,
-the M and C extensions, and machine-mode Zicsr instructions while exposing
-registers, CSRs, memory, caches, traps, and timing state.
-
-The Single-Cycle, Multi-Cycle, and five-stage Pipeline engines share one
-instruction-semantics layer and are tested to produce the same architectural
-state. Their timing, stalls, flushes, and in-flight state are intentionally
-different.
-
-> **Desktop UI:** the web interface is designed for a desktop browser. Use a
-> viewport at least 1280 px wide; 1440 px or wider is recommended. Mobile and
-> touch-first layouts are not supported at this stage.
+An educational simulator for 32-bit RISC-V programs. Write C or assembly in
+the browser, then run it on a Single-Cycle, Multi-Cycle, or five-stage Pipeline
+CPU and inspect what happens at each step.
 
 <p align="center">
   <img
     src=".github/assets/githubreadmeweb.jpg"
-    alt="RISC-V RV32IMC simulator desktop interface"
+    alt="RISC-V RV32 simulator desktop interface"
     width="1400"
   >
 </p>
 
-## What is included
+## Run it with Docker
 
-- RV32I base integer instructions, M multiplication/division, RV32C compressed
-  instructions, and machine-mode Zicsr operations.
-- Single-Cycle correctness-oracle execution.
-- Variable-CPI Multi-Cycle execution.
-- Cycle-stepped five-stage Pipeline execution with forwarding, RAW hazards,
-  load-use stalls, static branch prediction, control flushes, and precise
-  interrupt entry.
-- Configurable split instruction/data caches with direct-mapped through
-  16-way layouts, FIFO or LRU replacement, and timing-mode miss penalties.
-- Sparse 32-bit memory, timer/console/interrupt MMIO, traps, and machine CSRs.
-- C and assembly builds through the GNU RISC-V bare-metal toolchain.
-- A NiceGUI desktop workspace with source and linker editors, disassembly,
-  register/CSR/memory/cache views, pipeline timing, breakpoints, and terminal
-  I/O.
-- A headless CLI and a small Python API.
-- Unit, integration, architectural-parity, browser, and optional Spike golden
-  tests.
+Install [Docker](https://docs.docker.com/get-started/get-docker/), then choose
+how you want to run the published image.
 
-## Requirements
+For a temporary container that Docker removes after it stops:
 
-- Python 3.12 or newer.
-- [`uv`](https://docs.astral.sh/uv/getting-started/installation/) for the
-  reproducible Python environment.
-- GNU RISC-V bare-metal tools using the `riscv64-unknown-elf-` prefix, even
-  though generated programs target RV32.
-- A current desktop Firefox or Chromium-family browser for the web UI.
-- Optional: Spike for the golden-reference tests.
-
-The required external executables are:
-
-```text
-riscv64-unknown-elf-gcc
-riscv64-unknown-elf-objcopy
-riscv64-unknown-elf-objdump
-riscv64-unknown-elf-readelf
-riscv64-unknown-elf-nm
+```bash
+docker run --rm -p 8080:8080 atomc/rv32-simulator-atom:latest
 ```
 
-The project first checks `~/opt/riscv/bin/`, then checks `PATH`.
+To keep the container so you can restart it later:
 
-On Ubuntu or Debian, the compiler and binutils can usually be installed with:
+```bash
+docker run --name rv32-simulator -p 8080:8080 atomc/rv32-simulator-atom:latest
+```
+
+Restart the saved container with:
+
+```bash
+docker start -a rv32-simulator
+```
+
+Open <http://localhost:8080> and press `Ctrl+C` when you want to stop it.
+
+The image already includes the simulator, GUI, example programs, Python, and
+the RISC-V GNU toolchain. You do not need to clone or build the project. Other
+published versions are listed on [Docker Hub](https://hub.docker.com/r/atomc/rv32-simulator-atom/tags).
+
+## Features
+
+- RV32I base instructions, the M and C extensions, and machine-mode Zicsr
+  instructions.
+- Single-Cycle, Multi-Cycle, and five-stage Pipeline execution.
+- Pipeline forwarding, hazards, stalls, branch prediction, and flushes.
+- Configurable instruction and data caches with FIFO or LRU replacement.
+- Registers, CSRs, memory, cache state, disassembly, pipeline timing, traps,
+  breakpoints, and terminal I/O in the GUI.
+- Freestanding C and assembly programs compiled with the GNU RISC-V toolchain.
+- A headless CLI and a small Python API.
+
+This is a desktop interface. A browser window at least 1280 px wide is
+recommended; mobile layouts are not supported.
+
+## Using the GUI
+
+1. Pick an example or paste a freestanding C/assembly program into the editor.
+2. Select an ISA profile and linker mode.
+3. Press **Compile**.
+4. Choose **Single-Cycle**, **Multi-Cycle**, or **Pipeline**.
+5. Use **Step** or **Run**, then inspect the CPU and memory panels.
+
+Programs must provide `_start`; there is no C runtime or standard library. The
+default build places code at `0x00010000`. Choose **With linker** when a program
+uses the bundled section layout or symbols such as `__stack_top`.
+
+| Mode | One Step does |
+|---|---|
+| Single-Cycle | Executes one complete instruction |
+| Multi-Cycle | Advances one stage clock |
+| Pipeline | Advances the whole pipeline by one clock |
+
+| Action | Linux / Windows | macOS |
+|---|---|---|
+| Step | `Ctrl+Enter` | `Cmd+Enter` |
+| Run / Stop | `Ctrl+Shift+Enter` | `Cmd+Shift+Enter` |
+| Reset | `Ctrl+Alt+R` | `Cmd+Alt+R` |
+
+## Run from source
+
+Use this setup only if you want to develop the simulator or use the CLI/API.
+You need:
+
+- Python 3.12 or newer
+- [`uv`](https://docs.astral.sh/uv/getting-started/installation/)
+- A GNU RISC-V bare-metal toolchain with the `riscv64-unknown-elf-` prefix
+
+On Ubuntu or Debian, install the toolchain with:
 
 ```bash
 sudo apt update
 sudo apt install gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf
 ```
 
-On Windows, WSL2 with an Ubuntu environment is the recommended route. On
-other systems, install a bare-metal RISC-V GNU toolchain and ensure the
-executables above are on `PATH`.
-
-Confirm the compiler is visible before launching the simulator:
-
-```bash
-riscv64-unknown-elf-gcc --version
-```
-
-## Quick start
+Then clone and start the GUI:
 
 ```bash
 git clone https://github.com/AtomChidjai/RISC-V-SIM.git
@@ -90,139 +105,21 @@ uv sync
 uv run rv32i-gui
 ```
 
-Open <http://127.0.0.1:8080>. The server listens only on the local machine by
-default.
+The local server listens on <http://127.0.0.1:8080>. You can also start it with
+`uv run gui/app.py`.
 
-Running directly from a source checkout is also supported:
+### CLI
 
-```bash
-uv run gui/app.py
-```
-
-### Docker
-
-The image includes Python, the simulator, GUI assets, example programs, and
-the GNU RISC-V bare-metal toolchain:
-
-```bash
-docker build -t rv32i-simulator .
-docker run --rm -p 8080:8080 rv32i-simulator
-```
-
-Open <http://127.0.0.1:8080>. The container runs as an unprivileged user and
-stores compiled programs only in its temporary filesystem.
-
-### Deploy on Render
-
-The included `render.yaml` defines a free Docker web service in the Singapore
-region. After pushing the repository to GitHub:
-
-1. In Render, choose **New > Blueprint**.
-2. Connect the GitHub repository and select `render.yaml`.
-3. Review the free service and apply the Blueprint.
-4. Wait for the image build, then open the generated `onrender.com` URL.
-
-Render supplies its listening port through `PORT`; the application reads it
-automatically. Free services sleep when idle and use an ephemeral filesystem,
-which is suitable here because build outputs are temporary.
-
-### First GUI run
-
-1. Choose a program from **Example**, or paste freestanding C/assembly into
-   the source editor.
-2. Select the compiler ISA and linker mode.
-3. Press **Compile**.
-4. Choose **Single-Cycle**, **Multi-Cycle**, or **Pipeline**.
-5. Use **Step** for one instruction/clock or **Run** for timed execution.
-6. Inspect the disassembly, registers, CSRs, memory, cache, decode state, and
-   timing panels. Open **Terminal** for MMIO output/input and **Trap Log** for
-   exceptions and interrupts.
-
-The example selector includes instruction, terminal, algorithm, cache,
-pipeline, compressed-instruction, and timer-interrupt programs. Examples are
-packaged with the application, so they also work when the project is installed
-from a wheel.
-
-### Execution controls
-
-| Action | Linux / Windows | macOS |
-|---|---|---|
-| Step | `Ctrl+Enter` | `Cmd+Enter` |
-| Run / Stop | `Ctrl+Shift+Enter` | `Cmd+Shift+Enter` |
-| Reset | `Ctrl+Alt+R` | `Cmd+Alt+R` |
-
-Shortcuts do not fire while an editor, terminal, input, or select control has
-focus.
-
-### Mode behavior
-
-- **Single-Cycle:** one Step is one complete instruction and one modeled
-  clock. It is the architectural correctness oracle. Cache misses do not add
-  clocks.
-- **Multi-Cycle:** one Step is one stage clock. Instructions take different
-  numbers of clocks; configured cache misses add timing penalties.
-- **Pipeline:** one Step advances the whole five-stage pipeline by one clock.
-  Forwarding, branch prediction, hazards, flushes, cache stalls, and pipeline
-  drain state are visible in the timing workspace.
-
-Changing modes stops Run. If work is in flight, the simulator resets the
-loaded program before transferring control to the new engine.
-
-### Source and linker modes
-
-The source editor accepts freestanding `.c`, `.s`, and `.S` programs. Programs
-must provide `_start`; there is no C runtime or standard library.
-
-The default build places text at `0x00010000` without the project linker
-script. Select **With linker** when a program needs the bundled section layout
-or symbols such as `__stack_top`, `__data_start`, or `__bss_start`.
-
-The GUI offers RV32I, RV32IM, RV32IC, and RV32IMC compiler profiles, all with
-Zicsr enabled. These profiles constrain compiler output; the simulator core
-continues to implement its full RV32IMC + Zicsr surface.
-
-### Cache, terminal, traps, and breakpoints
-
-- Cache geometry, associativity, block size, replacement policy, and I/D miss
-  penalties are available in the Memory System panel.
-- Cache penalties affect Multi-Cycle and Pipeline timing only. MMIO bypasses
-  cache line-miss penalties.
-- Terminal input is delivered through console-in MMIO. An empty read pauses or
-  freezes the active engine until input arrives.
-- The Trap Log shows exception/interrupt cause, PC, trap value, and target.
-- Click a disassembly instruction to toggle a GUI-owned breakpoint.
-
-## Headless CLI
-
-Run a C or assembly program with the Single-Cycle engine:
+Run a C or assembly file with the Single-Cycle engine:
 
 ```bash
 uv run rv32i programs/examples/hello_terminal.c --trace --register
 ```
 
-```text
-usage: rv32i [-h] [--trace] [--max-cycles N] [--register] [--memory]
-             [--verbose-decode] [--verbose-register]
-             source
-```
+Useful options are `--trace`, `--register`, `--memory`, and `--max-cycles N`.
+Run `uv run rv32i --help` for the complete command reference.
 
-Useful examples:
-
-```bash
-# Print the final registers
-uv run rv32i programs/isa/demo_all_types.c --register --max-cycles 500
-
-# Print the execution trace and a memory dump
-uv run rv32i programs/examples/bubble_sort.c --trace --memory
-```
-
-The command exits with status 0 when the processor halts and status 1 when it
-stops at the cycle budget first. Console-out MMIO streams to stdout. Terminal
-input replay and GUI breakpoints are GUI-only features.
-
-## Python API
-
-The package root intentionally exports only `Simulator`:
+### Python API
 
 ```python
 from rv32i import Simulator
@@ -235,105 +132,47 @@ print(sim.state())
 print(sim.cache_stats())
 ```
 
-For custom frontends, call exactly one engine at a time:
-
-```python
-sim.step()       # one Single-Cycle instruction
-sim.step_clk()   # one Multi-Cycle clock
-sim.step_pipe()  # one Pipeline clock
-```
-
-`Simulator` is the stable package entry point. Submodules remain available for
-advanced use but are not treated as a compatibility-stable public API.
+`Simulator` is the package's public entry point. Use `step()`, `step_clk()`, or
+`step_pipe()` to advance the Single-Cycle, Multi-Cycle, or Pipeline engine.
 
 ## Configuration
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `RV32I_GUI_HOST` | `127.0.0.1` | NiceGUI bind address |
-| `RV32I_GUI_PORT` | `8080` | NiceGUI port |
+| `RV32I_GUI_HOST` | `127.0.0.1` | GUI bind address |
+| `RV32I_GUI_PORT` | `8080` | GUI port |
 | `PORT` | unset | Hosting-provider port when `RV32I_GUI_PORT` is unset |
-| `RV32I_DEBUG` | unset | Set to `1` for core instruction diagnostics |
+| `RV32I_DEBUG` | unset | Set to `1` for instruction diagnostics |
 
-For example:
+Binding the source version to `0.0.0.0` exposes it to your network. The GUI has
+no authentication, so only do this on a trusted network.
 
-```bash
-RV32I_GUI_PORT=9090 uv run rv32i-gui
-```
+## Development
 
-Binding to `0.0.0.0` exposes the development UI to your network. The app has
-no authentication layer, and compiling source executes the local RISC-V
-toolchain, so do that only on a trusted network and machine.
-
-## Development and verification
-
-Install every development extra:
+Install the development dependencies and run the checks:
 
 ```bash
 uv sync --extra test --extra browser-test --extra lint
-```
-
-Run the complete headless suite:
-
-```bash
 uv run pytest -q
+uv run ruff check .
 ```
 
-Run the real-browser smoke separately:
+The browser test is opt-in:
 
 ```bash
 RUN_BROWSER_TESTS=1 uv run pytest -q tests/test_gui_browser.py
 ```
 
-Run lint and build the distributable package:
+The included [`render.yaml`](render.yaml) can also deploy the project as a
+Docker service on Render.
 
-```bash
-uv run ruff check .
-uv build
-```
+## Scope
 
-Golden tests compare final register state against Spike. They run when both
-`spike` and the RISC-V compiler are available and skip otherwise. The ordinary
-suite and the hand-assembled three-engine parity tests do not require Spike.
+This project is an instruction-set and teaching-oriented timing simulator. It
+is not RTL, a Linux system emulator, or a complete implementation of the
+RISC-V privileged specification.
 
-### Install the built commands
-
-After `uv build`, install the wheel as a local tool:
-
-```bash
-uv tool install dist/rv32i_simulator-0.1.0-py3-none-any.whl
-rv32i --help
-rv32i-gui
-```
-
-Use `uv tool uninstall rv32i-simulator` to remove it.
-
-## Project structure
-
-```text
-rv32i/      simulator core, execution engines, caches, devices, loaders
-gui/        NiceGUI application, desktop theme, renderers, browser assets
-programs/   freestanding C examples and architectural test programs
-tests/      unit, parity, toolchain, renderer, and browser tests
-```
-
-`rv32i.Simulator` is the only execution orchestrator shared by the CLI and GUI.
-The `compute_*` helpers describe instruction effects without mutating
-architectural state; each engine controls when those effects commit.
-
-## Scope and limitations
-
-This is an educational instruction-set and timing simulator, not RTL, a Linux
-system emulator, or a complete implementation of the RISC-V privileged
-specification. Timing is modeled for teaching and engine comparison; it does
-not predict a specific physical processor. The web UI is desktop-only.
-
-## License and third-party notices
-
-Project code is released under the [MIT License](LICENSE).
-
-The vendored WaveDrom browser bundle retains its own notice in
-[`gui/assets/vendor/WAVEDROM_LICENSE`](gui/assets/vendor/WAVEDROM_LICENSE).
-RISC-V names and marks belong to RISC-V International. This independent
-educational project is not endorsed by or affiliated with RISC-V
-International.
+Released under the [MIT License](LICENSE). The vendored WaveDrom bundle keeps
+its own [license notice](gui/assets/vendor/WAVEDROM_LICENSE). RISC-V names and
+marks belong to RISC-V International; this project is independent and is not
+endorsed by RISC-V International.
