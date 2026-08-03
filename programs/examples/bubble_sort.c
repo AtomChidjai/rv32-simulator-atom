@@ -25,5 +25,5 @@ void _start(void) {
         print_character(index + 1 == count ? '\n' : ' ');
     }
 
-    __asm__ volatile ("ebreak");
+    __builtin_trap();
 }

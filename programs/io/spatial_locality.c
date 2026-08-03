@@ -1,15 +1,15 @@
-// Spatial-locality cache demo.
+/* Four adjacent reads: one cold miss followed by same-block hits. */
 
-__attribute__((naked)) void _start(void) {
-    asm volatile(
-        "li x10, 0x80000000\n" // Base of a 4-word run, all in one block
+volatile unsigned int spatial_sum;
 
-        "lw x1, 0(x10)\n"      // Word 0 -> MISS (cold fill of the block)
-        "lw x2, 4(x10)\n"      // Word 1 -> HIT  (same block)
-        "lw x3, 8(x10)\n"      // Word 2 -> HIT  (same block)
-        "lw x4, 12(x10)\n"     // Word 3 -> HIT  (same block)
+void _start(void) {
+    volatile unsigned int *words = (volatile unsigned int *)0x80000000u;
 
-        "li x1, 0\n"
-        "ebreak\n"
-    );
+    unsigned int first = words[0];
+    unsigned int second = words[1];
+    unsigned int third = words[2];
+    unsigned int fourth = words[3];
+    spatial_sum = first + second + third + fourth;
+
+    __builtin_trap();
 }

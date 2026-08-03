@@ -8,6 +8,5 @@ static void print_text(const char *text) {
 
 void _start(void) {
     print_text("Hello from RISC-V!\n");
-    __asm__ volatile ("ebreak");
+    __builtin_trap();
 }
-

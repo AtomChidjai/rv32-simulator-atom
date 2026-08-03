@@ -57,11 +57,11 @@ from gui.example_programs import (
 )
 
 _C_STARTER = """\
+volatile unsigned int result;
+
 void _start(void) {
-    asm volatile(
-        "addi x5, x0, 42\\n"
-        "ebreak\\n"
-    );
+    result = 42;
+    __builtin_trap();
 }
 """
 _ASSEMBLY_STARTER = """\
@@ -717,22 +717,16 @@ class SimulatorUI:
             return
 
         try:
-            source = example.path.read_text(encoding="utf-8")
+            source = example.path_for(self._source_language).read_text(encoding="utf-8")
         except OSError as exc:
             self.apply_status(
                 f"Could not load example '{example.label}': {exc}", C_RED
             )
             return
 
-        self._source_language = example.language
         self._arch = example.arch
         self._link_mode = example.link_mode
         self.example_select.value = example.id
-        self.source_language_select.value = next(
-            label
-            for label, language in self._source_language_labels.items()
-            if language == example.language
-        )
         self.arch_select.value = next(
             label
             for label, arch in self._arch_labels.items()
@@ -743,7 +737,7 @@ class SimulatorUI:
             for label, mode in self._link_mode_labels.items()
             if mode == example.link_mode
         )
-        self.editor.set_language("C" if example.language == "c" else "Gas")
+        self.editor.set_language("C" if self._source_language == "c" else "Gas")
         self.editor.set_value(source)
         self._breakpoints.clear()
         self.update_ld_hint()
@@ -757,14 +751,17 @@ class SimulatorUI:
             self.switch_source_view("linker")
 
     def on_source_language_change(self, language: str) -> None:
-        """Replace, compile, and reset for the selected source language."""
+        """Load the selected example in the requested source language."""
         if language not in ("c", "assembly") or language == self._source_language:
             return
         self._source_language = language
+        example_id = self.example_select.value
+        if example_id in EXAMPLE_PROGRAMS_BY_ID:
+            self.on_example_change(example_id)
+            return
+
         self.editor.set_language("C" if language == "c" else "Gas")
-        self.editor.set_value(
-            _C_STARTER if language == "c" else _ASSEMBLY_STARTER
-        )
+        self.editor.set_value(_C_STARTER if language == "c" else _ASSEMBLY_STARTER)
         self._breakpoints.clear()
         self.switch_source_view("source")
         self.compile()

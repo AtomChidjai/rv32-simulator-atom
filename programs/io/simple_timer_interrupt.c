@@ -33,8 +33,8 @@ void _start(void) {
     );
 
     while (!timer_interrupt_seen) {
-        __asm__ volatile ("nop");
+        /* Wait for the machine timer interrupt. */
     }
 
-    __asm__ volatile ("ebreak");
+    __builtin_trap();
 }

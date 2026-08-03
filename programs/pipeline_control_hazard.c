@@ -1,17 +1,13 @@
-__attribute__((naked)) void _start(void) {
-    asm volatile(
-        "beq x0, x0, 1f\n"
-        "addi x1, x0, 99\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "1:\n"
-        "addi x1, x0, 7\n"
-        "ebreak\n"
-    );
+volatile unsigned int branch_result;
+
+void _start(void) {
+    unsigned int value = 0;
+
+    if (value == 0) {
+        branch_result = 7;
+    } else {
+        branch_result = 99;
+    }
+
+    __builtin_trap();
 }

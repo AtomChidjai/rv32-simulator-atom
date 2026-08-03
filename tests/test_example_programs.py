@@ -9,6 +9,7 @@ from gui.example_programs import (
     DEFAULT_EXAMPLE_ID,
     EXAMPLE_PROGRAMS,
     EXAMPLE_PROGRAMS_BY_ID,
+    SOURCE_LANGUAGES,
 )
 from rv32i.builder import RISCV_GCC, build
 from rv32i.elf_loader import load_elf
@@ -32,15 +33,26 @@ def test_example_catalog_has_unique_ids_labels_and_existing_sources() -> None:
     )
 
     for example in EXAMPLE_PROGRAMS:
-        assert example.path.is_file(), example.relative_path
-        assert example.path.read_text(encoding="utf-8").strip()
+        for language in SOURCE_LANGUAGES:
+            path = example.path_for(language)
+            assert path.is_file(), path
+            assert path.read_text(encoding="utf-8").strip()
+            assert path.suffix == (".c" if language == "c" else ".s")
 
 
 @needs_toolchain
-@pytest.mark.parametrize("example", EXAMPLE_PROGRAMS, ids=lambda example: example.id)
-def test_every_example_compiles_with_its_catalog_settings(example) -> None:
+@pytest.mark.parametrize(
+    ("example", "language"),
+    [
+        (example, language)
+        for example in EXAMPLE_PROGRAMS
+        for language in SOURCE_LANGUAGES
+    ],
+    ids=lambda value: value.id if hasattr(value, "id") else value,
+)
+def test_every_example_compiles_with_its_catalog_settings(example, language) -> None:
     result = build(
-        str(example.path),
+        str(example.path_for(language)),
         march=example.arch,
         link_mode=example.link_mode,
     )
@@ -52,6 +64,7 @@ def test_every_example_compiles_with_its_catalog_settings(example) -> None:
 
 
 @needs_toolchain
+@pytest.mark.parametrize("language", SOURCE_LANGUAGES)
 @pytest.mark.parametrize(
     ("example_id", "expected_output", "cycle_ceiling"),
     [
@@ -60,12 +73,12 @@ def test_every_example_compiles_with_its_catalog_settings(example) -> None:
     ],
 )
 def test_functional_examples_run_to_halt_and_print(
-    example_id: str, expected_output: str, cycle_ceiling: int
+    example_id: str, expected_output: str, cycle_ceiling: int, language: str
 ) -> None:
     example = EXAMPLE_PROGRAMS_BY_ID[example_id]
     simulator = Simulator(trace=False, max_cycles=500)
 
-    simulator.load(str(example.path))
+    simulator.load(str(example.path_for(language)))
     simulator.run(max_cycles=500, delay=0)
 
     assert simulator.proc.halted

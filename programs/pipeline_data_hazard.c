@@ -1,16 +1,8 @@
-__attribute__((naked)) void _start(void) {
-    asm volatile(
-        "addi x1, x0, 5\n"
-        "add x2, x1, x1\n"
-        "add x3, x2, x1\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "nop\n"
-        "ebreak\n"
-    );
+volatile unsigned int pipeline_result;
+
+void _start(void) {
+    unsigned int first = 5u;
+    unsigned int second = first + first;
+    pipeline_result = second + first;
+    __builtin_trap();
 }

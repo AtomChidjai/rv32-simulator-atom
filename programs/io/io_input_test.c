@@ -1,19 +1,14 @@
 #define CONSOLE_OUT (*(volatile char *)0x10000000)
 #define CONSOLE_IN  (*(volatile char *)0x10000004)
 
-void putc(char c) { CONSOLE_OUT = c; }
-char getchar() { return CONSOLE_IN; }
+static void put_character(char character) { CONSOLE_OUT = character; }
+static char get_character(void) { return CONSOLE_IN; }
 
-int main() {
-    putc('>');
-    putc(' ');
-    char c = getchar();
-    putc(c);
-    putc('\n');
-    return 0;
-}
-
-void _start() {
-    main();
-    __asm__ volatile ("ebreak");
+void _start(void) {
+    put_character('>');
+    put_character(' ');
+    char character = get_character();
+    put_character(character);
+    put_character('\n');
+    __builtin_trap();
 }

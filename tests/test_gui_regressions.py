@@ -6,7 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from gui import app as gui_app
-from gui.app import SimulatorUI, _ASSEMBLY_STARTER, _C_STARTER
+from gui.app import SimulatorUI
 from gui.example_programs import EXAMPLE_PROGRAMS_BY_ID
 from gui.renderers import (
     build_asm_view_html,
@@ -291,13 +291,28 @@ def test_branch_prediction_stats_format_has_no_lost_cycle_metric() -> None:
     assert "cycle" not in text.lower()
 
 
-def test_source_language_change_replaces_compiles_and_resets() -> None:
+def test_source_language_change_loads_selected_example_variant() -> None:
     ui = SimulatorUI.__new__(SimulatorUI)
     ui._source_language = "c"
+    ui._arch = "rv32imc_zicsr"
+    ui._link_mode = "no_linker"
+    ui._arch_labels = {
+        "RV32I": "rv32i_zicsr",
+        "RV32IMC": "rv32imc_zicsr",
+    }
+    ui._link_mode_labels = {
+        "No linker": "no_linker",
+        "With linker": "linker",
+    }
+    ui.example_select = _WidgetStub("hello-terminal")
+    ui.arch_select = _WidgetStub()
+    ui.link_select = _WidgetStub()
     ui.editor = _WidgetStub()
     ui._breakpoints = {0x10000}
+    hints: list[bool] = []
     switched: list[str] = []
     compiled: list[bool] = []
+    ui.update_ld_hint = lambda: hints.append(True)
     ui.switch_source_view = switched.append
     ui.compile = lambda: compiled.append(True)
 
@@ -305,9 +320,10 @@ def test_source_language_change_replaces_compiles_and_resets() -> None:
 
     ui.on_source_language_change("assembly")
 
+    example = EXAMPLE_PROGRAMS_BY_ID["hello-terminal"]
     assert ui.source_suffix() == ".s"
     assert ui.editor.languages[-1] == "Gas"
-    assert ui.editor.value == _ASSEMBLY_STARTER
+    assert ui.editor.value == example.path_for("assembly").read_text(encoding="utf-8")
     assert ui._breakpoints == set()
     assert switched == ["source"]
     assert compiled == [True]
@@ -315,7 +331,8 @@ def test_source_language_change_replaces_compiles_and_resets() -> None:
     ui.on_source_language_change("c")
     assert ui.source_suffix() == ".c"
     assert ui.editor.languages[-1] == "C"
-    assert ui.editor.value == _C_STARTER
+    assert ui.editor.value == example.path_for("c").read_text(encoding="utf-8")
+    assert hints == [True, True]
     assert compiled == [True, True]
 
 
@@ -334,7 +351,7 @@ def test_example_change_loads_source_build_settings_and_compiles() -> None:
         "With linker": "linker",
     }
     ui.example_select = _WidgetStub()
-    ui.source_language_select = _WidgetStub()
+    ui.source_language_select = _WidgetStub("Assembly")
     ui.arch_select = _WidgetStub()
     ui.link_select = _WidgetStub()
     ui.editor = _WidgetStub()
@@ -349,15 +366,15 @@ def test_example_change_loads_source_build_settings_and_compiles() -> None:
     ui.on_example_change("hello-terminal")
 
     example = EXAMPLE_PROGRAMS_BY_ID["hello-terminal"]
-    assert ui._source_language == "c"
+    assert ui._source_language == "assembly"
     assert ui._arch == example.arch
     assert ui._link_mode == example.link_mode
     assert ui.example_select.value == example.id
-    assert ui.source_language_select.value == "C"
+    assert ui.source_language_select.value == "Assembly"
     assert ui.arch_select.value == "RV32IMC"
     assert ui.link_select.value == "No linker"
-    assert ui.editor.languages == ["C"]
-    assert ui.editor.value == example.path.read_text(encoding="utf-8")
+    assert ui.editor.languages == ["Gas"]
+    assert ui.editor.value == example.path_for("assembly").read_text(encoding="utf-8")
     assert ui._breakpoints == set()
     assert hints == [True]
     assert switched == ["source"]
